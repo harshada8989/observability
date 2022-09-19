@@ -288,6 +288,7 @@ export const DataConfigPanelItem = ({
       </>
   );
   };
+
   const getCommonDimensionsField = (selectedObj: any, name: string) => (
     <EuiFormRow label="Field">
       <EuiComboBox
