@@ -278,7 +278,7 @@ export interface LiveTailProps {
 export interface ConfigListEntry {
   label: string;
   aggregation: string;
-  custom_label: string;
+  alias: string;
   name: string;
   side: string;
   type: string;
@@ -327,4 +327,9 @@ export interface DataConfigPanelProps {
 export interface GetTooltipHoverInfoType {
   tooltipMode: string;
   tooltipText: string;
+}
+
+export interface SelectedConfigItem {
+  index: number;
+  name: string;
 }

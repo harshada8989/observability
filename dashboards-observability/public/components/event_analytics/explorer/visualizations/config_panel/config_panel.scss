@@ -136,3 +136,20 @@ $vis-editor-sidebar-min-width: 350px;
   height: 1198px;
   overflow: auto;
 }
+
+.panelItem_button {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-gap: $euiSizeS;
+  padding: $euiSizeS $euiSizeM;
+  align-items: center;
+}
+
+.field_text {
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.panel_section{
+  border-bottom: 1px solid #D3DAE6;
+}
+
