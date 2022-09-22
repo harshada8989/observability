@@ -4,80 +4,87 @@
  */
 /* eslint-disable react-hooks/exhaustive-deps */
 
-import './explorer.scss';
-import React, { useState, useMemo, useEffect, useRef, useCallback, ReactElement } from 'react';
-import { batch, useDispatch, useSelector } from 'react-redux';
-import { isEmpty, cloneDeep, isEqual, has, reduce } from 'lodash';
-import { FormattedMessage } from '@osd/i18n/react';
-import { EuiLoadingSpinner, EuiSpacer } from '@elastic/eui';
+import dateMath from '@elastic/datemath';
 import {
-  EuiText,
   EuiButtonIcon,
-  EuiTabbedContent,
-  EuiTabbedContentTab,
+  EuiContextMenuItem,
   EuiFlexGroup,
   EuiFlexItem,
   EuiLink,
-  EuiContextMenuItem,
+  EuiLoadingSpinner,
+  EuiSpacer,
+  EuiTabbedContent,
+  EuiTabbedContentTab,
+  EuiText,
 } from '@elastic/eui';
-import dateMath from '@elastic/datemath';
+import { FormattedMessage } from '@osd/i18n/react';
 import classNames from 'classnames';
-import { Search } from '../../common/search/search';
-import { CountDistribution } from './visualizations/count_distribution';
-import { DataGrid } from './events_views/data_grid';
-import { Sidebar } from './sidebar';
-import { NoResults } from './no_results';
-import { HitsCounter } from './hits_counter/hits_counter';
-import { TimechartHeader } from './timechart_header';
-import { ExplorerVisualizations } from './visualizations';
-import { IField, IQueryTab, IDefaultTimestampState } from '../../../../common/types/explorer';
+import { cloneDeep, has, isEmpty, isEqual, reduce } from 'lodash';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { batch, useDispatch, useSelector } from 'react-redux';
 import {
-  TAB_CHART_TITLE,
-  TAB_EVENT_TITLE,
+  AVAILABLE_FIELDS,
+  DATE_PICKER_FORMAT,
+  DEFAULT_AVAILABILITY_QUERY,
+  EVENT_ANALYTICS_DOCUMENTATION_URL,
+  NEW_TAB,
   RAW_QUERY,
+  SAVED_OBJECT_ID,
+  SAVED_OBJECT_TYPE,
+  SAVED_QUERY,
+  SAVED_VISUALIZATION,
   SELECTED_DATE_RANGE,
   SELECTED_FIELDS,
   SELECTED_TIMESTAMP,
-  AVAILABLE_FIELDS,
-  TIME_INTERVAL_OPTIONS,
-  SAVED_QUERY,
-  SAVED_VISUALIZATION,
-  SAVED_OBJECT_ID,
-  SAVED_OBJECT_TYPE,
-  NEW_TAB,
-  TAB_CREATED_TYPE,
-  EVENT_ANALYTICS_DOCUMENTATION_URL,
-  TAB_EVENT_ID,
   TAB_CHART_ID,
-  DEFAULT_AVAILABILITY_QUERY,
-  DATE_PICKER_FORMAT,
+  TAB_CHART_TITLE,
+  TAB_CREATED_TYPE,
+  TAB_EVENT_ID,
+  TAB_EVENT_TITLE,
+  TIME_INTERVAL_OPTIONS,
 } from '../../../../common/constants/explorer';
 import {
-  PPL_STATS_REGEX,
-  PPL_NEWLINE_REGEX,
-  LIVE_OPTIONS,
   LIVE_END_TIME,
+  LIVE_OPTIONS,
+  PPL_NEWLINE_REGEX,
+  PPL_STATS_REGEX,
+  visChartTypes,
 } from '../../../../common/constants/shared';
-import { getIndexPatternFromRawQuery, preprocessQuery, buildQuery } from '../../../../common/utils';
-import { useFetchEvents, useFetchVisualizations } from '../hooks';
-import { changeQuery, changeDateRange, selectQueries } from '../redux/slices/query_slice';
-import { selectQueryResult } from '../redux/slices/query_result_slice';
-import { selectFields, updateFields, sortFields } from '../redux/slices/field_slice';
-import { updateTabName } from '../redux/slices/query_tab_slice';
-import { selectCountDistribution } from '../redux/slices/count_distribution_slice';
-import { selectExplorerVisualization } from '../redux/slices/visualization_slice';
-import { change as changeVizConfig } from '../redux/slices/viualization_config_slice';
+import { QueryManager } from '../../../../common/query_manager/ppl_query_manager';
 import {
-  selectVisualizationConfig,
-  change as changeVisualizationConfig,
-} from '../redux/slices/viualization_config_slice';
-import { change as updateVizConfig } from '../redux/slices/viualization_config_slice';
-import { IExplorerProps, IVisualizationContainerProps } from '../../../../common/types/explorer';
-import { TabContext } from '../hooks';
-import { getVizContainerProps } from '../../visualizations/charts/helpers';
-import { parseGetSuggestions, onItemSelect } from '../../common/search/autocomplete_logic';
-import { formatError } from '../utils';
+  IDefaultTimestampState,
+  IExplorerProps,
+  IField,
+  IQueryTab,
+  IVisualizationContainerProps,
+} from '../../../../common/types/explorer';
+import { buildQuery, getIndexPatternFromRawQuery, preprocessQuery } from '../../../../common/utils';
 import { sleep } from '../../common/live_tail/live_tail_button';
+import { onItemSelect, parseGetSuggestions } from '../../common/search/autocomplete_logic';
+import { Search } from '../../common/search/search';
+import { getVizContainerProps } from '../../visualizations/charts/helpers';
+import { TabContext, useFetchEvents, useFetchVisualizations } from '../hooks';
+import { selectCountDistribution } from '../redux/slices/count_distribution_slice';
+import { selectFields, sortFields, updateFields } from '../redux/slices/field_slice';
+import { selectQueryResult } from '../redux/slices/query_result_slice';
+import { changeDateRange, changeQuery, selectQueries } from '../redux/slices/query_slice';
+import { updateTabName } from '../redux/slices/query_tab_slice';
+import { selectExplorerVisualization } from '../redux/slices/visualization_slice';
+import {
+  change as changeVisualizationConfig,
+  change as changeVizConfig,
+  change as updateVizConfig,
+  selectVisualizationConfig,
+} from '../redux/slices/viualization_config_slice';
+import { formatError } from '../utils';
+import { DataGrid } from './events_views/data_grid';
+import './explorer.scss';
+import { HitsCounter } from './hits_counter/hits_counter';
+import { NoResults } from './no_results';
+import { Sidebar } from './sidebar';
+import { TimechartHeader } from './timechart_header';
+import { ExplorerVisualizations } from './visualizations';
+import { CountDistribution } from './visualizations/count_distribution';
 
 const TYPE_TAB_MAPPING = {
   [SAVED_QUERY]: TAB_EVENT_ID,
@@ -307,7 +314,7 @@ export const Explorer = ({
     indexPattern: string
   ): Promise<IDefaultTimestampState> => await timestampUtils.getTimestamp(indexPattern);
 
-  const fetchData = async (startingTime?: string, endingTime?: string) => {
+  const fetchData = async (isRefresh?: boolean, startingTime?: string, endingTime?: string) => {
     const curQuery = queryRef.current;
     const rawQueryStr = buildQuery(appBasedRef.current, curQuery![RAW_QUERY]);
     const curIndex = getIndexPatternFromRawQuery(rawQueryStr);
@@ -366,10 +373,7 @@ export const Explorer = ({
           changeVisualizationConfig({
             tabId,
             vizId: visId,
-            data: {
-              ...userVizConfigs[visId],
-              dataConfig: {},
-            },
+            data: isRefresh ? { dataConfig: {} } : { ...userVizConfigs[visId] },
           })
         );
       }
@@ -838,7 +842,7 @@ export const Explorer = ({
       if (availability !== true) {
         await updateQueryInStore(tempQuery);
       }
-      await fetchData();
+      await fetchData(true);
 
       if (selectedContentTabId === TAB_CHART_ID) {
         // parse stats section on every search
@@ -1187,7 +1191,7 @@ export const Explorer = ({
   const handleLiveTailSearch = useCallback(
     async (startingTime: string, endingTime: string) => {
       await updateQueryInStore(tempQuery);
-      fetchData(startingTime, endingTime);
+      fetchData(false, startingTime, endingTime);
     },
     [tempQuery]
   );
