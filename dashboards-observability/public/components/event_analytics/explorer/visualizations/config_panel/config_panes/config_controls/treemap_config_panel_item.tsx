@@ -6,6 +6,7 @@
 import {
   EuiButton,
   EuiComboBox,
+  EuiComboBoxOptionOption,
   EuiFlexItem,
   EuiFormRow,
   EuiPanel,
@@ -20,10 +21,12 @@ import {
   NUMERICAL_TYPES,
 } from '../../../../../../../../common/constants/explorer';
 import { TabContext } from '../../../../../hooks';
-import { ConfigTreemapParentFields, ParentUnitType } from './config_treemap_parents';
+import { ConfigTreemapParentFields } from './config_treemap_parents';
 import { DataConfigItemClickPanel } from './data_config_item_click_panel';
-import { DataConfigPanelProps } from '../../../../../../../../common/types/explorer';
-
+import {
+  DataConfigPanelProps,
+  ParentUnitType,
+} from '../../../../../../../../common/types/explorer';
 
 export const TreemapConfigPanelItem = ({
   fieldOptionList,
@@ -61,8 +64,7 @@ export const TreemapConfigPanelItem = ({
   }, [userConfigs?.dataConfig, visualizations.vis.name]);
 
   const updateList = (configName: string, fieldName: string, value: string | any[]) => {
-    const list = { ...configList };
-    let listItem = { ...list[configName][0] };
+    let listItem = { ...configList[configName][0] };
 
     const newField = {
       label: value,
@@ -71,7 +73,7 @@ export const TreemapConfigPanelItem = ({
     };
     listItem = { ...listItem, [fieldName]: typeof value === 'string' ? newField : value };
     const newList = {
-      ...list,
+      ...configList,
       [configName]: [listItem],
     };
     setConfigList(newList);
@@ -119,17 +121,10 @@ export const TreemapConfigPanelItem = ({
       : unselectedFields;
   };
 
-  const options = getOptionsAvailable(DIMENSIONS)
-    .map((opt) => ({
-      label: opt.label,
-      name: opt.label,
-    }))
-    .map((item) => {
-      return {
-        ...item,
-        label: item.name,
-      };
-    });
+  const options = getOptionsAvailable(DIMENSIONS).map((opt) => ({
+    label: opt.label,
+    name: opt.name,
+  }));
 
   const renderParentPanel = () => {
     const selectedAxis = configList.dimensions[0]?.parentFields;
@@ -148,10 +143,8 @@ export const TreemapConfigPanelItem = ({
           selectedOptions={selectedAxis[index].label !== '' ? [selectedAxis[index]] : []}
           isClearable={true}
           singleSelection={{ asPlainText: true }}
-          onChange={(option) => {
-            handleParentChange(option);
-          }}
-          aria-label="Use aria labels when no actual label is in use"
+          onChange={handleParentChange}
+          aria-label="Parent field"
         />
       </>
     );
@@ -159,12 +152,12 @@ export const TreemapConfigPanelItem = ({
   const handleUpdateParentFields = (arr: ParentUnitType[]) =>
     updateList(DIMENSIONS, PARENTFIELDS, arr);
 
-  const handleParentChange = (options: Array<EuiComboBoxOptionOption<unknown>>) => {
+  const handleParentChange = (values: Array<EuiComboBoxOptionOption<unknown>>) => {
     const selectedAxis = configList.dimensions[0]?.parentFields;
     const { index } = selectedParentItem;
     const val = [
       ...selectedAxis.slice(0, index),
-      (options[0] as ParentUnitType) ?? initialParentState,
+      (values[0] as ParentUnitType) ?? initialParentState,
       ...selectedAxis.slice(index + 1, selectedAxis.length),
     ];
     handleUpdateParentFields(val);

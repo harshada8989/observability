@@ -334,7 +334,8 @@ export interface SelectedConfigItem {
   name: string;
 }
 
-export interface SelectedConfigItem {
-  index: number;
+export interface ParentUnitType {
   name: string;
+  label: string;
+  type: string;
 }

@@ -36,6 +36,7 @@ import {
   ConfigList,
   SelectedConfigItem,
   DataConfigPanelProps,
+  ConfigListEntry,
 } from '../../../../../../../../common/types/explorer';
 import { TabContext } from '../../../../../hooks';
 import { changeQuery } from '../../../../../redux/slices/query_slice';
@@ -62,15 +63,9 @@ export const DataConfigPanelItem = ({
   qm,
 }: DataConfigPanelProps) => {
   const dispatch = useDispatch();
-  const {
-    tabId,
-    handleQuerySearch,
-    handleQueryChange,
-    setTempQuery,
-    fetchData,
-    changeVisualizationConfig,
-    curVisId,
-  } = useContext<any>(TabContext);
+  const { tabId, handleQueryChange, fetchData, changeVisualizationConfig, curVisId } = useContext<
+    any
+  >(TabContext);
   const { data } = visualizations;
   const { data: vizData = {}, metadata: { fields = [] } = {} } = data?.rawVizData;
   const {
@@ -95,8 +90,7 @@ export const DataConfigPanelItem = ({
   const updateList = (value: string, field: string) => {
     if (value !== '') {
       const { index, name } = selectedConfigItem;
-      const list = { ...configList };
-      let listItem = { ...list[name][index] };
+      let listItem = { ...configList[name][index] };
       listItem = {
         ...listItem,
         [field === 'custom_label' ? 'alias' : field]: value.trim(),
@@ -105,11 +99,11 @@ export const DataConfigPanelItem = ({
         listItem.name = value;
       }
       const updatedList = {
-        ...list,
+        ...configList,
         [name]: [
-          ...list[name].slice(0, index),
+          ...configList[name].slice(0, index),
           listItem,
-          ...list[name].slice(index + 1, list[name].length),
+          ...configList[name].slice(index + 1, configList[name].length),
         ],
       };
       setConfigList(updatedList);
@@ -235,7 +229,7 @@ export const DataConfigPanelItem = ({
               {!isDimensions && (
                 <EuiFormRow label="Aggregation">
                   <EuiComboBox
-                    aria-label="Accessible screen reader label"
+                    aria-label="aggregation input"
                     placeholder="Select a aggregation"
                     singleSelection={{ asPlainText: true }}
                     options={AGGREGATION_OPTIONS}
@@ -261,7 +255,7 @@ export const DataConfigPanelItem = ({
                       placeholder="Custom label"
                       value={selectedObj.alias}
                       onChange={(e) => updateList(e.target.value, 'alias')}
-                      aria-label="Use aria labels when no actual label is in use"
+                      aria-label="input label"
                     />
                   </EuiFormRow>
                 </>
@@ -289,10 +283,10 @@ export const DataConfigPanelItem = ({
   );
   };
 
-  const getCommonDimensionsField = (selectedObj: any, name: string) => (
+  const getCommonDimensionsField = (selectedObj: ConfigListEntry, name: string) => (
     <EuiFormRow label="Field">
       <EuiComboBox
-        aria-label="Accessible screen reader label"
+        aria-label="input field"
         placeholder="Select a field"
         singleSelection={{ asPlainText: true }}
         options={getOptionsAvailable(name)}
@@ -373,7 +367,7 @@ export const DataConfigPanelItem = ({
             <EuiPanel color="subdued" style={{ padding: '0px' }}>
               <EuiFormRow label="Timestamp">
                 <EuiComboBox
-                  aria-label="Accessible screen reader label"
+                  aria-label="Timestamp field"
                   placeholder="Select fields"
                   singleSelection
                   options={availableFields
@@ -412,12 +406,12 @@ export const DataConfigPanelItem = ({
                       };
                     });
                   }}
-                  aria-label="Use aria labels when no actual label is in use"
+                  aria-label="interval field"
                 />
               </EuiFormRow>
               <EuiFormRow label="Unit">
                 <EuiComboBox
-                  aria-label="Accessible screen reader label"
+                  aria-label="date unit"
                   placeholder="Select fields"
                   singleSelection
                   options={TIME_INTERVAL_OPTIONS.map((option) => {
