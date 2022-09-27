@@ -120,7 +120,7 @@ export const AGGREGATION_OPTIONS = [
 ];
 
 // numeric fields type for metrics
-export const numericalTypes = [
+export const NUMERICAL_TYPES = [
   'float',
   'double',
   'bigint',
@@ -175,9 +175,6 @@ export const DEFAULT_PIE_CHART_PARAMETERS: DefaultPieChartParameterProps = {
 };
 export const GROUPBY = 'dimensions';
 export const AGGREGATIONS = 'series';
-export const DIMENSIONS = 'dimensions';
-export const METRICS = 'metrics';
-export const SERIES = 'Series';
 export const PARENTFIELDS = 'parentFields';
 export const VALUEFIELD = 'valueField';
 export const CHILDFIELD = 'childField';

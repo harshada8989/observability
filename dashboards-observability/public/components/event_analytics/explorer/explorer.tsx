@@ -924,7 +924,6 @@ export const Explorer = ({
 
       if (selectedContentTabId === TAB_CHART_ID) {
         // parse stats section on every search
-        const qm = new QueryManager();
         const statsTokens = qm.queryParser().parse(tempQuery).getStats();
 
         const updatedDataConfig = getUpdatedDataConfig(statsTokens);
@@ -932,7 +931,7 @@ export const Explorer = ({
           changeVizConfig({
             tabId,
             vizId: curVisId,
-            data: { ...updatedDataConfig },
+            data: { dataConfig: { ...updatedDataConfig } },
           })
         );
       }

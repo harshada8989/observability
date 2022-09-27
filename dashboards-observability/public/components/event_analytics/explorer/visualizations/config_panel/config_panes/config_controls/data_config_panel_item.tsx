@@ -21,22 +21,17 @@ import {
   AGGREGATIONS,
   AGGREGATION_OPTIONS,
   GROUPBY,
-  NUMERICAL_TYPES,
   RAW_QUERY,
-  SERIES,
   TIMESTAMP,
   TIME_INTERVAL_OPTIONS,
 } from '../../../../../../../../common/constants/explorer';
-import { ButtonGroupItem } from './config_button_group';
 import { VIS_CHART_TYPES } from '../../../../../../../../common/constants/shared';
-import { ConfigList, DataConfigPanelProps } from '../../../../../../../../common/types/explorer';
-import { TabContext } from '../../../../../hooks';
 import { composeAggregations } from '../../../../../../../../common/query_manager/utils';
 import {
   ConfigList,
-  SelectedConfigItem,
-  DataConfigPanelProps,
   ConfigListEntry,
+  DataConfigPanelProps,
+  SelectedConfigItem,
 } from '../../../../../../../../common/types/explorer';
 import { TabContext } from '../../../../../hooks';
 import { changeQuery } from '../../../../../redux/slices/query_slice';
@@ -63,9 +58,15 @@ export const DataConfigPanelItem = ({
   qm,
 }: DataConfigPanelProps) => {
   const dispatch = useDispatch();
-  const { tabId, handleQueryChange, fetchData, changeVisualizationConfig, curVisId } = useContext<
-    any
-  >(TabContext);
+  const {
+    tabId,
+    handleQuerySearch,
+    handleQueryChange,
+    setTempQuery,
+    fetchData,
+    changeVisualizationConfig,
+    curVisId,
+  } = useContext<any>(TabContext);
   const { data } = visualizations;
   const { data: vizData = {}, metadata: { fields = [] } = {} } = data?.rawVizData;
   const {
@@ -88,26 +89,24 @@ export const DataConfigPanelItem = ({
   }, [userConfigs?.dataConfig, visualizations.vis.name]);
 
   const updateList = (value: string, field: string) => {
-    if (value !== '') {
-      const { index, name } = selectedConfigItem;
-      let listItem = { ...configList[name][index] };
-      listItem = {
-        ...listItem,
-        [field === 'custom_label' ? 'alias' : field]: value.trim(),
-      };
-      if (field === 'label') {
-        listItem.name = value;
-      }
-      const updatedList = {
-        ...configList,
-        [name]: [
-          ...configList[name].slice(0, index),
-          listItem,
-          ...configList[name].slice(index + 1, configList[name].length),
-        ],
-      };
-      setConfigList(updatedList);
+    const { index, name } = selectedConfigItem;
+    let listItem = { ...configList[name][index] };
+    listItem = {
+      ...listItem,
+      [field === 'custom_label' ? 'alias' : field]: value.trim(),
+    };
+    if (field === 'label') {
+      listItem.name = value;
     }
+    const updatedList = {
+      ...configList,
+      [name]: [
+        ...configList[name].slice(0, index),
+        listItem,
+        ...configList[name].slice(index + 1, configList[name].length),
+      ],
+    };
+    setConfigList(updatedList);
   };
 
   const updateHistogramConfig = (configName: string, fieldName: string, value: string) => {
@@ -142,7 +141,24 @@ export const DataConfigPanelItem = ({
     setConfigList(list);
   };
 
-  const updateChart = (updatedConfigList: ConfigList = configList) => {
+  const handleServiceEdit = (isClose: boolean, arrIndex: number, sectionName: string) => {
+    if (isClose) {
+      const { index, name } = selectedConfigItem;
+      const selectedObj = configList[name][index];
+      if (
+        selectedObj.aggregation !== 'count' &&
+        (selectedObj.aggregation === '' || selectedObj.name === '')
+      ) {
+        const list = { ...configList };
+        list[name].splice(index, 1);
+        setConfigList(list);
+      }
+    }
+    setSelectedConfigItem({ index: arrIndex, name: sectionName });
+    setIsAddConfigClicked(!isClose);
+  };
+
+  const updateChart = (updatedConfigList = configList) => {
     if (visualizations.vis.name === VIS_CHART_TYPES.Histogram) {
       dispatch(
         changeVizConfig({
@@ -152,8 +168,8 @@ export const DataConfigPanelItem = ({
             ...userConfigs,
             dataConfig: {
               ...userConfigs.dataConfig,
-              [GROUPBY]: configList[GROUPBY],
-              [AGGREGATIONS]: configList[AGGREGATIONS],
+              [GROUPBY]: updatedConfigList[GROUPBY],
+              [AGGREGATIONS]: updatedConfigList[AGGREGATIONS],
             },
           },
         })
@@ -183,8 +199,8 @@ export const DataConfigPanelItem = ({
             data: {
               dataConfig: {
                 ...userConfigs.dataConfig,
-                [GROUPBY]: configList[GROUPBY],
-                [AGGREGATIONS]: configList[AGGREGATIONS],
+                [GROUPBY]: updatedConfigList[GROUPBY],
+                [AGGREGATIONS]: updatedConfigList[AGGREGATIONS],
                 breakdowns: updatedConfigList.breakdowns,
                 span: updatedConfigList.span,
               },
@@ -214,7 +230,7 @@ export const DataConfigPanelItem = ({
   const getCommonUI = (title: string) => {
     const { index, name } = selectedConfigItem;
     const selectedObj = configList[name][index];
-    const isDimensions = name === DIMENSIONS;
+    const isDimensions = name === GROUPBY;
     return (
       <>
         <div key={index} className="services">
@@ -225,7 +241,7 @@ export const DataConfigPanelItem = ({
               closeMenu={() => handleServiceEdit(true, -1, '')}
             />
             <EuiPanel color="subdued" style={{ padding: '0px' }}>
-              {/* Aggregation input for Metrics */}
+              {/* Aggregation input for Series */}
               {!isDimensions && (
                 <EuiFormRow label="Aggregation">
                   <EuiComboBox
@@ -246,7 +262,7 @@ export const DataConfigPanelItem = ({
                   />
                 </EuiFormRow>
               )}
-              {/* Show input fields for metrics when aggregation is not empty  */}
+              {/* Show input fields for Series when aggregation is not empty  */}
               {!isDimensions && selectedObj.aggregation !== '' && (
                 <>
                   {getCommonDimensionsField(selectedObj, name)}
@@ -280,7 +296,7 @@ export const DataConfigPanelItem = ({
           </div>
         </div>
       </>
-  );
+    );
   };
 
   const getCommonDimensionsField = (selectedObj: ConfigListEntry, name: string) => (
@@ -315,7 +331,7 @@ export const DataConfigPanelItem = ({
             ? configList[GROUPBY][0][type]
             : ''
         }
-        onChange={(e) => updateHistogramConfig(DIMENSIONS, type, e.target.value)}
+        onChange={(e) => updateHistogramConfig(GROUPBY, type, e.target.value)}
         data-test-subj="valueFieldNumber"
       />
       <EuiSpacer size="s" />
@@ -441,11 +457,10 @@ export const DataConfigPanelItem = ({
     );
   }, [availableFields, configList.span]);
 
-  const getRenderFieldsObj = (sectionName: string, title: string) => {
+  const getRenderFieldsObj = (sectionName: string) => {
     return {
       list: configList[sectionName],
       sectionName,
-      title,
       visType: visualizations.vis.name,
       addButtonText: 'Click to add',
       handleServiceAdd,
@@ -454,7 +469,7 @@ export const DataConfigPanelItem = ({
     };
   };
   return isAddConfigClicked ? (
-    getCommonUI(selectedConfigItem.name === METRICS ? SERIES : 'Dimensions')
+    getCommonUI(selectedConfigItem.name)
   ) : (
     <>
       <EuiTitle size="xxs">
@@ -463,9 +478,9 @@ export const DataConfigPanelItem = ({
       <EuiSpacer size="s" />
       {visualizations.vis.name !== VIS_CHART_TYPES.Histogram ? (
         <>
-          {DataConfigPanelFields(getRenderFieldsObj(METRICS, SERIES))}
+          {DataConfigPanelFields(getRenderFieldsObj(AGGREGATIONS))}
           <EuiSpacer size="s" />
-          {DataConfigPanelFields(getRenderFieldsObj(DIMENSIONS, 'Dimensions'))}
+          {DataConfigPanelFields(getRenderFieldsObj(GROUPBY))}
           <EuiSpacer size="s" />
           <EuiTitle size="xxs">
             <h3>Date Histogram</h3>
