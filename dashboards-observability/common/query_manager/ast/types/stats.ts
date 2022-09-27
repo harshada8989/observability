@@ -22,7 +22,7 @@ export interface GroupField {
 }
 
 export interface SpanChunk {
-  alias: string;
+  customLabel: string;
   span_expression: SpanExpressionChunk;
 }
 
@@ -54,7 +54,7 @@ export interface ExpressionChunk {
 }
 
 export interface DataConfigSeries {
-  alias: string;
+  customLabel: string;
   label: string;
   name: string;
   aggregation: string;

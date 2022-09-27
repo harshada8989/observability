@@ -13,7 +13,7 @@ import {
 } from '../../../../../common/constants/shared';
 import { AvailabilityUnitType } from '../../../event_analytics/explorer/visualizations/config_panel/config_panes/config_controls/config_availability';
 import { ThresholdUnitType } from '../../../event_analytics/explorer/visualizations/config_panel/config_panes/config_controls/config_thresholds';
-import { hexToRgb } from '../../../event_analytics/utils/utils';
+import { getPropName, hexToRgb } from '../../../event_analytics/utils/utils';
 import { EmptyPlaceholder } from '../../../event_analytics/explorer/visualizations/shared_components/empty_placeholder';
 import { AGGREGATIONS, GROUPBY } from '../../../../../common/constants/explorer';
 import { IVisualizationContainerProps } from '../../../../../common/types/explorer';
@@ -107,8 +107,8 @@ export const Bar = ({ visualizations, layout, config }: any) => {
    * prepare data for visualization, map x-xais to y-xais
    */
   const chartAxis = useMemo(() => {
-    return Array.isArray(queriedVizData[`${yaxes[0].aggregation}(${yaxes[0].name})`])
-      ? queriedVizData[`${yaxes[0].aggregation}(${yaxes[0].name})`].map((_, idx) => {
+    return Array.isArray(queriedVizData[getPropName(yaxes[0])])
+      ? queriedVizData[getPropName(yaxes[0])].map((_, idx) => {
           // let combineXaxis = '';
           const xaxisName = xaxes.map((xaxis) => {
             return queriedVizData[xaxis.name] && queriedVizData[xaxis.name][idx]
@@ -122,8 +122,8 @@ export const Bar = ({ visualizations, layout, config }: any) => {
 
   bars = yaxes?.map((yMetric, idx) => {
     return {
-      y: isVertical ? queriedVizData[`${yMetric.aggregation}(${yMetric.name})`] : chartAxis,
-      x: isVertical ? chartAxis : queriedVizData[`${yMetric.aggregation}(${yMetric.name})`],
+      y: isVertical ? queriedVizData[getPropName(yMetric)] : chartAxis,
+      x: isVertical ? chartAxis : queriedVizData[getPropName(yMetric)],
       type: visMetaData.type,
       marker: {
         color: getSelectedColorTheme(yMetric, idx),
@@ -132,7 +132,7 @@ export const Bar = ({ visualizations, layout, config }: any) => {
           width: lineWidth,
         },
       },
-      name: yMetric.name,
+      name: getPropName(yMetric),
       orientation: barOrientation,
     };
   });

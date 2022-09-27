@@ -20,6 +20,7 @@ import { batch, useDispatch } from 'react-redux';
 import {
   AGGREGATIONS,
   AGGREGATION_OPTIONS,
+  CUSTOM_LABEL,
   GROUPBY,
   RAW_QUERY,
   TIMESTAMP,
@@ -46,7 +47,7 @@ const initialDimensionEntry = {
 };
 
 const initialSeriesEntry = {
-  alias: '',
+  [CUSTOM_LABEL]: '',
   label: '',
   name: '',
   aggregation: 'count',
@@ -93,7 +94,7 @@ export const DataConfigPanelItem = ({
     let listItem = { ...configList[name][index] };
     listItem = {
       ...listItem,
-      [field === 'custom_label' ? 'alias' : field]: value.trim(),
+      [field]: field === 'custom_label' ? value.trim() : value,
     };
     if (field === 'label') {
       listItem.name = value;
@@ -191,7 +192,7 @@ export const DataConfigPanelItem = ({
             },
           })
         );
-        await fetchData();
+        await fetchData(false);
         await dispatch(
           changeVizConfig({
             tabId,
@@ -269,8 +270,8 @@ export const DataConfigPanelItem = ({
                   <EuiFormRow label="Custom label">
                     <EuiFieldText
                       placeholder="Custom label"
-                      value={selectedObj.alias}
-                      onChange={(e) => updateList(e.target.value, 'alias')}
+                      value={selectedObj[CUSTOM_LABEL]}
+                      onChange={(e) => updateList(e.target.value, CUSTOM_LABEL)}
                       aria-label="input label"
                     />
                   </EuiFormRow>

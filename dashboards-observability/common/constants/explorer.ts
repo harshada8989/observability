@@ -179,3 +179,4 @@ export const PARENTFIELDS = 'parentFields';
 export const VALUEFIELD = 'valueField';
 export const CHILDFIELD = 'childField';
 export const TIMESTAMP = 'timestamp';
+export const CUSTOM_LABEL = 'customLabel';

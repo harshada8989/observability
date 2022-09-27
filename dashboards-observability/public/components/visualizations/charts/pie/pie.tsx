@@ -19,7 +19,9 @@ import {
   PIE_XAXIS_GAP,
   AGGREGATIONS,
   GROUPBY,
+  CUSTOM_LABEL,
 } from '../../../../../common/constants/explorer';
+import { getPropName } from '../../../event_analytics/utils/utils';
 
 export const Pie = ({ visualizations, layout, config }: any) => {
   const {
@@ -87,7 +89,9 @@ export const Pie = ({ visualizations, layout, config }: any) => {
   const pies = useMemo(
     () =>
       series.map((field: any, index: number) => {
-        const fieldName = field.alias ? field.alias : `${field.aggregation}(${field.name})`;
+        const fieldName = field[CUSTOM_LABEL]
+          ? field[CUSTOM_LABEL]
+          : `${field.aggregation}(${field.name})`;
         const marker =
           colorTheme.name !== DEFAULT_PALETTE
             ? {
@@ -104,7 +108,7 @@ export const Pie = ({ visualizations, layout, config }: any) => {
           labels: labelsOfXAxis,
           values: queriedVizData[fieldName],
           type: 'pie',
-          name: fieldName,
+          name: getPropName(field),
           hole: type === 'pie' ? 0 : 0.5,
           text: fieldName,
           textinfo: 'percent',

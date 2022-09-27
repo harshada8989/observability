@@ -15,6 +15,7 @@ import { VIS_CHART_TYPES } from '../../../../../common/constants/shared';
 import { QueryManager } from '../../../../../common/query_manager';
 import {
   AGGREGATIONS,
+  CUSTOM_LABEL,
   GROUPBY,
   PARENTFIELDS,
   TIME_INTERVAL_OPTIONS,
@@ -39,7 +40,7 @@ const initialDimensionEntry = {
 };
 
 const initialSeriesEntry = {
-  alias: '',
+  [CUSTOM_LABEL]: '',
   label: '',
   name: '',
   aggregation: 'count',
@@ -135,7 +136,7 @@ const defaultUserConfigs = (queryString, visualizationName: string) => {
       tempUserConfigs = {
         ...tempUserConfigs,
         [AGGREGATIONS]: statsTokens.aggregations.map((agg) => ({
-          alias: agg.alias,
+          [CUSTOM_LABEL]: agg[CUSTOM_LABEL],
           label: agg.function?.value_expression,
           name: agg.function?.value_expression,
           aggregation: agg.function?.name,

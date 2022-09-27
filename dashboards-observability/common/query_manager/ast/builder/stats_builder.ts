@@ -25,6 +25,7 @@ import {
   statsChunk,
   SpanExpressionChunk,
 } from '../types';
+import { CUSTOM_LABEL } from '../../../../common/constants/explorer';
 
 export class StatsBuilder implements QueryBuilder<Aggregations> {
   constructor(private statsChunk: statsChunk) {}
@@ -119,7 +120,7 @@ export class StatsBuilder implements QueryBuilder<Aggregations> {
       'span_clause',
       [] as Array<PPLNode>,
       this.buildeSpanExpression(span.span_expression),
-      span.alias
+      span[CUSTOM_LABEL]
     );
   }
 
